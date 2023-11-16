@@ -3,6 +3,7 @@ class Config(object):
     super().__init__()
     self.batch_size = 1024 # 16
     self.learning_rate = 0.01 # 4e-4 == 0.0004
+    self.model_path = "./.models"
     self.n_dnn_layers = 5 # Number of fully-connected hidden layers
     self.n_epochs = 10
     self.n_features = 1 # Number of features (Set to 1 since this is a univariate timeseries.)
