@@ -133,8 +133,8 @@ testloader = DataLoader(test_ds, batch_size=BATCH_SIZE, shuffle=False)
 start_time = time.time()
 logger.log.info(f"Training started at {start_time}...")
 
-model = LSTM(n_features, n_hidden, n_outputs, tw, n_deep_layers=n_dnn_layers, device=device.name).to(device.name)
-#model = GRU(input_dim=1, hidden_dim=32, num_layers=2, output_dim=1, device=device.name).to(device.name)
+model = LSTM(n_features, n_hidden, n_outputs, tw, n_deep_layers=n_dnn_layers, device_name=device.name).to(device.name)
+#model = GRU(input_dim=1, hidden_dim=32, num_layers=2, output_dim=1, device_name=device.name).to(device.name)
 criterion = nn.MSELoss(reduction="mean").to(device.name)
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 t_losses, v_losses = [], []
