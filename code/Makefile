@@ -12,14 +12,6 @@ venv/touchfile: requirements.txt
 
 
 
-forecast:
+hufflepuff:
 	. venv/bin/activate
-	python3 hufflepuff.py -m forecast
-
-train:
-	. venv/bin/activate
-	python3 hufflepuff.py -m train
-
-precog:
-	. venv/bin/activate
-	python3 hufflepuff.py -m train
+	python3 hufflepuff.py

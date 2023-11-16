@@ -3,12 +3,10 @@
 import os
 import time
 
-from lib import Forecaster, SequenceDataset, logger
+from lib import Forecaster, SequenceDataset, logger, plot
 from lib.models import GRU, LSTM
 
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import torch
 import torch.nn as nn
 import torch.mps
@@ -91,13 +89,6 @@ def make_predictions_from_dataloader(model, dataloader):
   actuals = actuals.numpy()
   return predictions.squeeze(), actuals
 
-def plot_losses(tr, va):
-  import matplotlib.pyplot as plt
-  fig, ax = plt.subplots()
-  ax.plot(tr, label='train')
-  ax.plot(va, label='validation')
-  plt.show()
-
 
 
 BATCH_SIZE = 1024 # 16
@@ -129,12 +120,7 @@ stock_data = load_stock_data()
 stock_data.set_index("Date", inplace=True)
 df = stock_data.copy().dropna(axis=0)
 
-# fig = px.line(data)
-# fig.update_layout(
-#     autosize=False,
-#     width=2400,
-#     height=800,)
-# fig.show()
+plot.plot_history(df)
 
 # from sklearn.preprocessing import StandardScaler
 # scalers = {}
@@ -210,7 +196,7 @@ for epoch in range(n_epochs):
 
 training_time = time.time() - start_time
 logger.log.info("Training time: {}".format(training_time))
-#plot_losses(t_losses, v_losses)
+plot.plot_losses(t_losses, v_losses)
 
 #endregion
 
@@ -223,10 +209,7 @@ P, Y = make_predictions_from_dataloader(model, unshuffled_dataloader)
 P.shape, Y.shape
 
 pdf = pd.DataFrame([P, Y], index=['predictions', 'actuals']).T
-
-fig = px.line(pdf)
-fig.update_layout(autosize=False, width=2400, height=800,)
-fig.show()
+plot.plot_predictions(pdf)
 
 prediction_time = time.time() - start_time
 logger.log.info("Prediction time: {}".format(prediction_time))
@@ -243,11 +226,7 @@ number_of_hours = 60
 number_of_steps = 60 * number_of_hours
 history = fc.n_step_forecast(number_of_steps)
 
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=history.index, y=history.actual, mode='lines', name='actual'))
-fig.add_trace(go.Scatter(x=history.index, y=history.forecast, mode='lines', name='forecast'))
-fig.update_layout(autosize=False, width=2400, height=800,)
-fig.show()
+plot.plot_forecast(history)
 
 forecast_time = time.time() - start_time
 logger.log.info("Forecast time: {}".format(forecast_time))
