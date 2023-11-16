@@ -1,7 +1,6 @@
 import numpy as np
-import torch
 import pandas as pd
-import plotly.graph_objects as go
+import torch
 
 
 class Forecaster:
@@ -27,7 +26,7 @@ class Forecaster:
       pred = pred.detach().cpu()
       return pred.numpy().reshape(-1)
 
-  def n_step_forecast(self, n: int, forecast_from: int=None, plot=False):
+  def n_step_forecast(self, n: int, forecast_from: int=None):
       '''
       n: integer defining how many steps to forecast
       forecast_from: integer defining which index to forecast from. None if
@@ -62,6 +61,5 @@ class Forecaster:
         ls[:len(history)] = history[self.target].values
         res = pd.DataFrame([ls, fc], index=['actual', 'forecast']).T
         #forecast.index = pd.date_range('2017-07-01', periods=n, freq='D')
-      if plot:
-        self.plot_forecast(res)
+
       return res

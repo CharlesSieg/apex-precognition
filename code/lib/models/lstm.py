@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class LSTM(nn.Module):
-  def __init__(self, n_features, n_hidden, n_outputs, sequence_len, n_lstm_layers=1, n_deep_layers=10, device="cpu", dropout=0.2):
+  def __init__(self, n_features, n_hidden, n_outputs, sequence_len, n_lstm_layers=1, n_deep_layers=10, device_name="cpu", dropout=0.2):
     '''
     n_features: number of input features (1 for univariate forecasting)
     n_hidden: number of neurons in each hidden layer
@@ -13,7 +13,7 @@ class LSTM(nn.Module):
     dropout: float (0 < dropout < 1) dropout ratio between dense layers
     '''
     super().__init__()
-    self.device = device
+    self.device_name = device_name
     self.n_lstm_layers = n_lstm_layers
     self.n_hidden = n_hidden
 
@@ -48,10 +48,10 @@ class LSTM(nn.Module):
     cell_state = torch.zeros(self.n_lstm_layers, x.shape[0], self.n_hidden)
 
     # move hidden state to device
-    if self.device != "cpu":
-      hidden_state = hidden_state.to(self.device)
-      cell_state = cell_state.to(self.device)
-      x = x.to(self.device)
+    if self.device_name != "cpu":
+      hidden_state = hidden_state.to(self.device_name)
+      cell_state = cell_state.to(self.device_name)
+      x = x.to(self.device_name)
 
     self.hidden = (hidden_state, cell_state)
 

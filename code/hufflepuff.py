@@ -3,13 +3,13 @@
 import os
 import time
 
-from lib import Forecaster, SequenceDataset, logger, plot
+from lib import Device, Forecaster, SequenceDataset
+from lib import logger, plot
 from lib.models import GRU, LSTM
 
 import pandas as pd
 import torch
 import torch.nn as nn
-import torch.mps
 from torch.utils.data import DataLoader, random_split
 from torch.utils.data.dataloader import default_collate
 
@@ -17,26 +17,7 @@ from torch.utils.data.dataloader import default_collate
 
 logger.log_manager.configure("DEBUG", "./.logs", "foo")
 logger.log.info(logger.LINE_BREAK)
-
-#region GPU configuration.
-
-device = "cpu"
-if torch.backends.mps.is_available():
-  mps_device = torch.device("mps")
-  x = torch.ones(1, device=mps_device)
-  logger.log.info(x)
-  # this ensures that the current current PyTorch installation was built with MPS activated.
-  logger.log.info(torch.backends.mps.is_built())
-  device = "mps"
-  logger.log.info("Metal GPU is available.")
-elif torch.cuda.is_available():
-  device = "cuda"
-  logger.log.info("Nvidia GPU is available.")
-else:
-  logger.log.info("GPU not found.")
-
-#endregion
-
+device = Device()
 
 def generate_sequences(df: pd.DataFrame, tw: int, pw: int, target_columns):
   '''
@@ -152,9 +133,9 @@ testloader = DataLoader(test_ds, batch_size=BATCH_SIZE, shuffle=False)
 start_time = time.time()
 logger.log.info(f"Training started at {start_time}...")
 
-model = LSTM(n_features, n_hidden, n_outputs, tw, n_deep_layers=n_dnn_layers, device=device).to(device)
-#model = GRU(input_dim=1, hidden_dim=32, num_layers=2, output_dim=1, device=device).to(device)
-criterion = nn.MSELoss(reduction="mean").to(device)
+model = LSTM(n_features, n_hidden, n_outputs, tw, n_deep_layers=n_dnn_layers, device=device.name).to(device.name)
+#model = GRU(input_dim=1, hidden_dim=32, num_layers=2, output_dim=1, device=device.name).to(device.name)
+criterion = nn.MSELoss(reduction="mean").to(device.name)
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 t_losses, v_losses = [], []
 
@@ -166,8 +147,8 @@ for epoch in range(n_epochs):
 
   for x, y in trainloader:
     optimizer.zero_grad()
-    x = x.to(device)
-    y = y.to(device)
+    x = x.to(device.name)
+    y = y.to(device.name)
 
     preds = model(x)
 
@@ -183,7 +164,7 @@ for epoch in range(n_epochs):
   model.eval()
   for x, y in testloader:
     with torch.no_grad():
-      x, y = x.to(device), y.squeeze().to(device)
+      x, y = x.to(device.name), y.squeeze().to(device.name)
       preds = model(x).squeeze()
       error = criterion(preds, y)
     valid_loss += error.item()
@@ -204,7 +185,7 @@ plot.plot_losses(t_losses, v_losses)
 
 start_time = time.time()
 logger.log.info(f"Prediction started at {start_time}...")
-unshuffled_dataloader = DataLoader(dataset, collate_fn=lambda x: [y.to(device) for y in default_collate(x)], batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
+unshuffled_dataloader = DataLoader(dataset, collate_fn=lambda x: [y.to(device.name) for y in default_collate(x)], batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
 P, Y = make_predictions_from_dataloader(model, unshuffled_dataloader)
 P.shape, Y.shape
 
