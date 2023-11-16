@@ -143,5 +143,6 @@ _output
 testing.yml
 .ruff_cache
 .logs/
+.models/
 .ipynb*
 data/*

@@ -54,7 +54,7 @@ class Training(object):
 
       logger.log.info(f'{epoch} - train: {epoch_loss}, valid: {valid_loss}')
       epoch_training_time = time.time() - epoch_training_start_time
-      logger.log.info("Epoch training time: {}".format(epoch_training_time))
+      logger.log.info(f"Epoch {epoch} training time: {epoch_training_time}")
 
     training_time = time.time() - start_time
     logger.log.info("Training time: {}".format(training_time))

@@ -4,6 +4,7 @@ from torch.utils.data import Dataset
 
 class SequenceDataset(Dataset):
   def __init__(self, df, target, features, sequence_length=5):
+    super().__init__()
     self.df = df
     self.features = features
     self.target = target
