@@ -1,9 +1,9 @@
 from .device import Device
-from .forecaster import Forecaster
+from .forecast import Forecast
 from .sequence_dataset import SequenceDataset
 
 __all__ = [
   "Device",
-  "Forecaster",
+  "Forecast",
   "SequenceDataset"
 ]

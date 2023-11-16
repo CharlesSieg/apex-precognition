@@ -3,7 +3,7 @@
 import os
 import time
 
-from lib import Device, Forecaster, SequenceDataset
+from lib import Device, Forecast, SequenceDataset
 from lib import logger, plot
 from lib.models import GRU, LSTM
 
@@ -197,19 +197,7 @@ logger.log.info("Prediction time: {}".format(prediction_time))
 
 #endregion
 
-#region Forecast
-
-start_time = time.time()
-logger.log.info(f"Forecast started at {start_time}...")
-fc = Forecaster(model, df, 'Close', tw)
-
-number_of_hours = 60
-number_of_steps = 60 * number_of_hours
-history = fc.n_step_forecast(number_of_steps)
-
-plot.plot_forecast(history)
-
-forecast_time = time.time() - start_time
-logger.log.info("Forecast time: {}".format(forecast_time))
-
-#endregion
+# Create and plot the forecast.
+forecast = Forecast(model, df, 'Close', tw)
+f = forecast.create()
+plot.plot_forecast(f)
