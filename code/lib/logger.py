@@ -51,5 +51,8 @@ class LogManager(object):
 
 
 flag = GracefulExiter()
+
 log_manager = LogManager()
 log = log_manager.log
+log_manager.configure("DEBUG", "./.logs", "foo")
+log.info(LINE_BREAK)

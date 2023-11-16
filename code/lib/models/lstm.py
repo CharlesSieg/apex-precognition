@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class LSTM(nn.Module):
-  def __init__(self, n_features, n_hidden, n_outputs, sequence_len, n_lstm_layers=1, n_deep_layers=10, device_name="cpu", dropout=0.2):
+  def __init__(self, config, device_name, dropout=0.2):
     '''
     n_features: number of input features (1 for univariate forecasting)
     n_hidden: number of neurons in each hidden layer
@@ -14,25 +14,25 @@ class LSTM(nn.Module):
     '''
     super().__init__()
     self.device_name = device_name
-    self.n_lstm_layers = n_lstm_layers
-    self.n_hidden = n_hidden
+    self.n_lstm_layers = 1 # config.n_lstm_layers
+    self.n_hidden = config.n_hidden
 
     # LSTM Layer
-    self.lstm = nn.LSTM(n_features, self.n_hidden, num_layers=self.n_lstm_layers, batch_first=True) # As we have transformed our data in this way
+    self.lstm = nn.LSTM(config.n_features, self.n_hidden, num_layers=self.n_lstm_layers, batch_first=True)
 
     # first dense after lstm
-    self.fc1 = nn.Linear(n_hidden * sequence_len, self.n_hidden)
+    self.fc1 = nn.Linear(config.n_hidden * config.tw, self.n_hidden)
 
     # Dropout layer
     self.dropout = nn.Dropout(p=dropout)
 
-    # Create fully connected layers (n_hidden x n_deep_layers)
+    # Create fully connected layers (n_hidden x n_dnn_layers)
     dnn_layers = []
-    for i in range(n_deep_layers):
+    for i in range(config.n_dnn_layers):
       # Last layer (n_hidden x n_outputs)
-      if i == n_deep_layers - 1:
+      if i == config.n_dnn_layers - 1:
         dnn_layers.append(nn.ReLU())
-        dnn_layers.append(nn.Linear(self.n_hidden, n_outputs))
+        dnn_layers.append(nn.Linear(self.n_hidden, config.n_outputs))
       # All other layers (n_hidden x n_hidden) with dropout option
       else:
         dnn_layers.append(nn.ReLU())

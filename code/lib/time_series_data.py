@@ -10,12 +10,12 @@ from lib import logger
 
 
 class TimeSeriesData(object):
-  def __init__(self, batch_size, n_outputs, training_split, training_window):
+  def __init__(self, config):
     super().__init__()
-    self.batch_size = batch_size
-    self.n_outputs = n_outputs
-    self.training_split = training_split
-    self.training_window = training_window
+    self.batch_size = config.batch_size
+    self.n_outputs = config.n_outputs
+    self.training_split = config.split
+    self.training_window = config.tw
 
   def prepare(self):
     # Load the stock pricing data.
@@ -49,7 +49,7 @@ class TimeSeriesData(object):
     torch.manual_seed(69)
     trainloader = DataLoader(train_ds, batch_size=self.batch_size, shuffle=True)
     testloader = DataLoader(test_ds, batch_size=self.batch_size, shuffle=False)
-    return df, trainloader, testloader
+    return df, dataset, trainloader, testloader
 
   #########################################################
   # PRIVATE METHODS
@@ -90,4 +90,3 @@ class TimeSeriesData(object):
     logger.log.debug(stock_data)
     logger.log.info(f"{len(stock_data)} prices loaded.")
     return stock_data
-

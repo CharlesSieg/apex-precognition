@@ -12,15 +12,15 @@ class Training(object):
     self.device_name = device_name
     self.model = model
 
-  def start(self, n_epochs, learning_rate, trainloader, testloader):
+  def start(self, config, trainloader, testloader):
     start_time = time.time()
     logger.log.info(f"Training started at {start_time}...")
 
     criterion = nn.MSELoss(reduction="mean").to(self.device_name)
-    optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(self.model.parameters(), lr=config.learning_rate)
     t_losses, v_losses = [], []
 
-    for epoch in range(n_epochs):
+    for epoch in range(config.n_epochs):
       epoch_training_start_time = time.time()
 
       train_loss, valid_loss = 0.0, 0.0
