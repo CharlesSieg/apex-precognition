@@ -3,7 +3,7 @@
 import os
 import time
 
-from lib import Device, Forecast, SequenceDataset
+from lib import Device, Forecast, Prediction, SequenceDataset, Training
 from lib import logger, plot
 from lib.models import GRU, LSTM
 
@@ -54,22 +54,6 @@ def load_stock_data():
   logger.log.debug(stock_data)
   logger.log.info(f"{len(stock_data)} prices loaded.")
   return stock_data
-
-def make_predictions_from_dataloader(model, dataloader):
-  model.eval()
-  predictions, actuals = [], []
-  for x, y in dataloader:
-    with torch.no_grad():
-      p = model(x)
-      #p = p[:,-1,:]
-      predictions.append(p)
-      actuals.append(y.squeeze())
-  predictions = torch.cat(predictions).cpu()
-  predictions = predictions.numpy()
-  actuals = torch.cat(actuals).cpu()
-  actuals = actuals.numpy()
-  return predictions.squeeze(), actuals
-
 
 
 BATCH_SIZE = 1024 # 16
@@ -128,76 +112,19 @@ testloader = DataLoader(test_ds, batch_size=BATCH_SIZE, shuffle=False)
 
 #endregion
 
-#region Train
-
-start_time = time.time()
-logger.log.info(f"Training started at {start_time}...")
-
+# Create and train the model.
 model = LSTM(n_features, n_hidden, n_outputs, tw, n_deep_layers=n_dnn_layers, device_name=device.name).to(device.name)
 #model = GRU(input_dim=1, hidden_dim=32, num_layers=2, output_dim=1, device_name=device.name).to(device.name)
-criterion = nn.MSELoss(reduction="mean").to(device.name)
-optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-t_losses, v_losses = [], []
-
-for epoch in range(n_epochs):
-  epoch_training_start_time = time.time()
-
-  train_loss, valid_loss = 0.0, 0.0
-  model.train()
-
-  for x, y in trainloader:
-    optimizer.zero_grad()
-    x = x.to(device.name)
-    y = y.to(device.name)
-
-    preds = model(x)
-
-    loss = criterion(preds, y)
-    train_loss += loss.item()
-    loss.backward()
-    optimizer.step()
-
-  epoch_loss = train_loss / len(trainloader)
-  t_losses.append(epoch_loss)
-
-  # validation step
-  model.eval()
-  for x, y in testloader:
-    with torch.no_grad():
-      x, y = x.to(device.name), y.squeeze().to(device.name)
-      preds = model(x).squeeze()
-      error = criterion(preds, y)
-    valid_loss += error.item()
-  valid_loss = valid_loss / len(testloader)
-  v_losses.append(valid_loss)
-
-  logger.log.info(f'{epoch} - train: {epoch_loss}, valid: {valid_loss}')
-  epoch_training_time = time.time() - epoch_training_start_time
-  logger.log.info("Epoch training time: {}".format(epoch_training_time))
-
-training_time = time.time() - start_time
-logger.log.info("Training time: {}".format(training_time))
+training = Training(model, device.name)
+t_losses, v_losses = training.start(n_epochs, learning_rate, trainloader, testloader)
 plot.plot_losses(t_losses, v_losses)
 
-#endregion
+# Make predictions.
+prediction = Prediction(model, device.name)
+predictions = prediction.create(dataset, BATCH_SIZE)
+plot.plot_predictions(predictions)
 
-#region Predict
-
-start_time = time.time()
-logger.log.info(f"Prediction started at {start_time}...")
-unshuffled_dataloader = DataLoader(dataset, collate_fn=lambda x: [y.to(device.name) for y in default_collate(x)], batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
-P, Y = make_predictions_from_dataloader(model, unshuffled_dataloader)
-P.shape, Y.shape
-
-pdf = pd.DataFrame([P, Y], index=['predictions', 'actuals']).T
-plot.plot_predictions(pdf)
-
-prediction_time = time.time() - start_time
-logger.log.info("Prediction time: {}".format(prediction_time))
-
-#endregion
-
-# Create and plot the forecast.
+# Create the forecast.
 forecast = Forecast(model, df, 'Close', tw)
 f = forecast.create()
 plot.plot_forecast(f)

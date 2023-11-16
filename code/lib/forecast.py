@@ -7,8 +7,9 @@ import torch
 from lib import logger
 
 
-class Forecast:
+class Forecast(object):
   def __init__(self, model, data, target, tw):
+    super().__init__()
     self.data = data
     self.model = model
     self.target = target
